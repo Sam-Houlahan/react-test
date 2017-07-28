@@ -9,7 +9,6 @@ class App extends React.Component {
       userName: '',
       error: '',
       repos: [],
-      default: [],
       received: false,
       hidden: []
     }
@@ -27,9 +26,9 @@ class App extends React.Component {
     .then(res => {
       this.setState({
         repos: res.body,
-        default: res.body,
         received: true,
-        error: ''
+        error: '',
+        sortedRepos: null
       })
     })
     .catch(err => {
@@ -44,47 +43,41 @@ class App extends React.Component {
   }
 
   handleSortById (repos) {
-    const sortedRepos = repos.sort((a, b) => a.id > b.id)
-    this.setState({
-      sortedRepos
+    const sortedRepos = repos.sort((a, b) => {
+      return a.id == b.id ? 0 : +(a.id > b.id) || -1
     })
+    this.setState({sortedRepos})
   }
 
   handleSortByName (repos) {
     const sortedRepos = repos.sort((a, b) => {
       return a.name.toLowerCase() == b.name.toLowerCase() ? 0 : +(a.name.toLowerCase() > b.name.toLowerCase()) || -1
     })
-    this.setState({
-      sortedRepos
-    })
+    this.setState({sortedRepos})
   }
 
   handleDefault () {
-    this.setState({
-      sortedRepos: null
-    })
+    this.setState({sortedRepos: null})
   }
 
   handleChange (evt) {
-    this.setState({
-      [evt.target.name]: evt.target.value
-    })
+    this.setState({[evt.target.name]: evt.target.value})
   }
 
   render () {
-    const test = this.state.sortedRepos || this.state.repos
-    const showingRepos = test.filter(repo => !this.state.hidden.includes(repo.id))
+    const repos = this.state.sortedRepos || this.state.repos
+    const showingRepos = repos.filter(repo => !this.state.hidden.includes(repo.id))
     return (
       <div>
+        <h2>Frisk Test</h2>
         {this.state.received &&
         <div className = 'buttons'>
           <button onClick={() => this.handleSortById(this.state.repos)}>Sort By Id </button>
           <button onClick={() => this.handleSortByName(this.state.repos)}>Sort By Name</button>
           <button onClick={() => this.handleDefault()}>Default Order</button>
-        </div>
-          }
+        </div>}
         <form onSubmit={this.handleSubmit}>
-            <p>{this.state.error.message}</p>
+          <p>{this.state.error.message}</p>
           <input type='text' name='userName' onChange={this.handleChange} />
           <button>Load Repos </button>
         </form>
@@ -105,7 +98,7 @@ class App extends React.Component {
                     <td>{repo.created_at}</td>
                     <td><button onClick={() => this.hideRepo(repo.id)}>Hide</button></td>
                   </tr>
-              </tbody>
+                </tbody>
               )
             })}
           </table>
