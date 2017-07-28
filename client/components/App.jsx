@@ -7,50 +7,61 @@ class App extends React.Component {
     super(props)
     this.state = {
       userName: '',
+      error: '',
       repos: [],
       default: [],
-      receive: false
+      received: false,
+      hidden: []
     }
     this.handleChange = this.handleChange.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
-    this.sortById = this.sortById.bind(this)
-    this.sortByName = this.sortByName.bind(this)
-    this.default = this.default.bind(this)
+    this.handleSortById = this.handleSortById.bind(this)
+    this.handleSortByName = this.handleSortByName.bind(this)
+    this.handleDefault = this.handleDefault.bind(this)
+    this.hideRepo = this.hideRepo.bind(this)
   }
 
   handleSubmit (evt) {
     evt.preventDefault()
-    getRepos(this.state.userName, (err, res) => {
-      if (err) return console.err
+    getRepos(this.state.userName)
+    .then(res => {
       this.setState({
-        repos: res,
-        default: res,
-        received: true
+        repos: res.body,
+        default: res.body,
+        received: true,
+        error: ''
+      })
+    })
+    .catch(err => {
+      this.setState({
+        error: err
       })
     })
   }
 
-  sortById (repos) {
-    const sortedIds = repos.map(repo => repo.id)
-    sortedIds.sort((a, b) => b - a)
-    const sortedRepos = sortedIds.map(id => repos.find(repo => id === repo.id))
+  hideRepo (id) {
+    this.setState({hidden: this.state.hidden.concat(id)})
+  }
+
+  handleSortById (repos) {
+    const sortedRepos = repos.sort((a, b) => a.id > b.id)
     this.setState({
-      repos: sortedRepos
+      sortedRepos
     })
   }
 
-  sortByName (repos) {
-    const sortedNames = repos.map(repo => repo.name)
-    sortedNames.sort((a, b) => a - b)
-    const sortedRepos = sortedNames.map(name => repos.find(repo => name === repo.name))
+  handleSortByName (repos) {
+    const sortedRepos = repos.sort((a, b) => {
+      return a.name.toLowerCase() == b.name.toLowerCase() ? 0 : +(a.name.toLowerCase() > b.name.toLowerCase()) || -1
+    })
     this.setState({
-      repos: sortedRepos
+      sortedRepos
     })
   }
 
-  default () {
+  handleDefault () {
     this.setState({
-      repos: this.state.default
+      sortedRepos: null
     })
   }
 
@@ -61,19 +72,22 @@ class App extends React.Component {
   }
 
   render () {
+    const test = this.state.sortedRepos || this.state.repos
+    const showingRepos = test.filter(repo => !this.state.hidden.includes(repo.id))
     return (
       <div>
-        <h1>Test</h1>
-          {this.state.received &&
-          <div className = 'buttons'>
-          <button onClick={() => this.sortById(this.state.repos)}>Sort By Id </button>
-          <button onClick={() => this.sortByName(this.state.repos)}>Sort By Name</button>
-          <button onClick={() => this.default()}>Default</button>
-          </div>
+        {this.state.received &&
+        <div className = 'buttons'>
+          <button onClick={() => this.handleSortById(this.state.repos)}>Sort By Id </button>
+          <button onClick={() => this.handleSortByName(this.state.repos)}>Sort By Name</button>
+          <button onClick={() => this.handleDefault()}>Default Order</button>
+        </div>
           }
         <form onSubmit={this.handleSubmit}>
+            <p>{this.state.error.message}</p>
           <input type='text' name='userName' onChange={this.handleChange} />
           <button>Load Repos </button>
+        </form>
           <table className='repo-table'>
             <tr>
               <th>Id</th>
@@ -81,20 +95,21 @@ class App extends React.Component {
               <th>Description</th>
               <th>Created At</th>
             </tr>
-            {this.state.repos.map((repo, i) => {
+            {showingRepos.map(repo => {
               return (
-                <tbody key={i}>
+                <tbody key={repo.id}>
                   <tr>
                     <td>{repo.id}</td>
                     <td>{repo.name}</td>
                     <td>{repo.description}</td>
                     <td>{repo.created_at}</td>
+                    <td><button onClick={() => this.hideRepo(repo.id)}>Hide</button></td>
                   </tr>
               </tbody>
               )
             })}
           </table>
-        </form>
+          <h4> Not showing {this.state.hidden.length} repos</h4>
       </div>
     )
   }
