@@ -43,21 +43,23 @@ class App extends React.Component {
   }
 
   handleSortById (repos) {
-    const sortedRepos = repos.sort((a, b) => {
+    const sortedRepos = repos.slice().sort((a, b) => {
       return a.id == b.id ? 0 : +(a.id > b.id) || -1
     })
     this.setState({sortedRepos})
   }
 
   handleSortByName (repos) {
-    const sortedRepos = repos.sort((a, b) => {
+    const sortedRepos = repos.slice().sort((a, b) => {
       return a.name.toLowerCase() == b.name.toLowerCase() ? 0 : +(a.name.toLowerCase() > b.name.toLowerCase()) || -1
     })
     this.setState({sortedRepos})
   }
 
   handleDefault () {
-    this.setState({sortedRepos: null})
+    this.setState({
+      sortedRepos: null
+    })
   }
 
   handleChange (evt) {
@@ -82,6 +84,7 @@ class App extends React.Component {
           <button>Load Repos </button>
         </form>
           <table className='repo-table'>
+            <tbody>
             <tr>
               <th>Id</th>
               <th>Name</th>
@@ -90,19 +93,18 @@ class App extends React.Component {
             </tr>
             {showingRepos.map(repo => {
               return (
-                <tbody key={repo.id}>
-                  <tr>
+                  <tr key={repo.id}>
                     <td>{repo.id}</td>
                     <td>{repo.name}</td>
                     <td>{repo.description}</td>
                     <td>{repo.created_at}</td>
                     <td><button onClick={() => this.hideRepo(repo.id)}>Hide</button></td>
                   </tr>
-                </tbody>
               )
             })}
+            </tbody>
           </table>
-          <h4> Not showing {this.state.hidden.length} repos</h4>
+          <h4>Not showing {this.state.hidden.length} repos</h4>
       </div>
     )
   }

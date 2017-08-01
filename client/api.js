@@ -1,6 +1,6 @@
 import request from 'superagent'
 
-export function getRepos (user) {
+export function getRepos (userName) {
   return request
-    .get(`https://api.github.com/users/${user}/repos`)
+    .get(`https://api.github.com/users/${userName}/repos`)
 }
